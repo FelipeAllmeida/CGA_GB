@@ -127,12 +127,13 @@ Vector3f Render::Trace(const Vector3f &p_rayOrigin, const Vector3f &p_rayDirecti
 // sphere at the intersection point, else we return the background color.
 //[/comment]
 
-void Render::RenderScene(const std::vector<Sphere> &p_spheres, Vector3f& p_ptrImage, unsigned  p_width, unsigned  p_height)
+
+void Render::RenderScene(const std::vector<Sphere> &p_spheres, unsigned  p_width, unsigned  p_height)
 {
 	Vector3f __cameraPosition = Vector3f(0.f, 0.f, 20.f);
 
-	p_ptrImage = *new Vector3f[p_width * p_height];
-	Vector3f *_pixel = &p_ptrImage;
+	Vector3f ptrImage = *new Vector3f[p_width * p_height];
+	Vector3f *_pixel = &ptrImage;
 	//p_ptrImage = *__ptrImage;
 	float __invWidth = 1 / float(p_width), invHeight = 1 / float(p_height);
 	float __fieldOfView = 30.0, _aspectRatio = float(p_width) / float(p_height);
@@ -151,6 +152,7 @@ void Render::RenderScene(const std::vector<Sphere> &p_spheres, Vector3f& p_ptrIm
 		}
 	}
 }
+
 
 //void RenderScenePTR(const std::vector<Sphere> &spheres, Vec3f& p_ptrImage, unsigned  p_width, unsigned  p_height)
 //{

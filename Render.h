@@ -18,6 +18,6 @@ public:
 	~Render();
 	float Mix(const float &p_a, const float &p_b, const float &p_mix);
 	Vector3f Trace(const Vector3f &p_rayorig, const Vector3f &p_raydir,	const std::vector<Sphere> &p_spheres, const int &p_depth);
-	void RenderScene(const std::vector<Sphere> &p_spheres, Vector3f& p_ptrImage, unsigned  p_width, unsigned  p_height);
+	void RenderScene(const std::vector<Sphere> &p_spheres, unsigned  p_width, unsigned  p_height);
 };
 

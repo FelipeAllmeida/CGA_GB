@@ -1,12 +1,19 @@
 ﻿  Vector3.cpp
   Sphere.cpp
   Render.cpp
-h:\files (github)\college - 7 semester\cga\cga_gb\render.cpp(60): warning C4305: 'initializing': truncation from 'double' to 'float'
-h:\files (github)\college - 7 semester\cga\cga_gb\render.cpp(69): warning C4305: 'argument': truncation from 'double' to 'const float'
-h:\files (github)\college - 7 semester\cga\cga_gb\render.cpp(81): warning C4305: 'initializing': truncation from 'double' to 'float'
-h:\files (github)\college - 7 semester\cga\cga_gb\render.cpp(139): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-h:\files (github)\college - 7 semester\cga\cga_gb\render.cpp(146): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-h:\files (github)\college - 7 semester\cga\cga_gb\render.cpp(147): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+e:\files (github)\college - 7 semester\cga\cga_gb\render.cpp(60): warning C4305: 'initializing': truncation from 'double' to 'float'
+e:\files (github)\college - 7 semester\cga\cga_gb\render.cpp(69): warning C4305: 'argument': truncation from 'double' to 'const float'
+e:\files (github)\college - 7 semester\cga\cga_gb\render.cpp(81): warning C4305: 'initializing': truncation from 'double' to 'float'
+e:\files (github)\college - 7 semester\cga\cga_gb\render.cpp(140): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+e:\files (github)\college - 7 semester\cga\cga_gb\render.cpp(147): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+e:\files (github)\college - 7 semester\cga\cga_gb\render.cpp(148): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+  main.cpp
+e:\files (github)\college - 7 semester\cga\cga_gb\main.cpp(39): warning C4305: 'argument': truncation from 'double' to 'float'
+e:\files (github)\college - 7 semester\cga\cga_gb\main.cpp(40): warning C4305: 'argument': truncation from 'double' to 'float'
+e:\files (github)\college - 7 semester\cga\cga_gb\main.cpp(41): warning C4305: 'argument': truncation from 'double' to 'float'
+e:\files (github)\college - 7 semester\cga\cga_gb\main.cpp(42): warning C4305: 'argument': truncation from 'double' to 'float'
+  Input.cpp
+  Filter.cpp
   Generating Code...
-  CGA_GB.vcxproj -> H:\Files (Github)\College - 7 Semester\CGA\CGA_GB\Debug\CGA_GB.exe
-  CGA_GB.vcxproj -> H:\Files (Github)\College - 7 Semester\CGA\CGA_GB\Debug\CGA_GB.pdb (Partial PDB)
+  CGA_GB.vcxproj -> E:\Files (Github)\College - 7 Semester\CGA\CGA_GB\Debug\CGA_GB.exe
+  CGA_GB.vcxproj -> E:\Files (Github)\College - 7 Semester\CGA\CGA_GB\Debug\CGA_GB.pdb (Partial PDB)
