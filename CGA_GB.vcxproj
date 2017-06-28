@@ -110,19 +110,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Filter.cpp" />
-    <ClCompile Include="Input.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="Render.cpp" />
-    <ClCompile Include="Sphere.cpp" />
-    <ClCompile Include="Vector3.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="Filter.h" />
-    <ClInclude Include="Input.h" />
-    <ClInclude Include="Render.h" />
-    <ClInclude Include="Sphere.h" />
-    <ClInclude Include="Vector3.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
