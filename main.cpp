@@ -117,17 +117,17 @@ float mix(const float &a, const float &b, const float &mix)
 // is the color of the object at the intersection point, otherwise it returns
 // the background color.
 //[/comment]
-int teste = 0;
 Vec3f trace(const Vec3f &p_ptrRayOrigin, const Vec3f &p_ptrRayDirection, const std::vector<Sphere> &p_spheres, const int &p_depth)
 {
 	//if (raydir.length() != 1) std::cerr << "Error " << raydir << std::endl;
 	float __near = INFINITY;
 	const Sphere* __sphere = NULL;
+
 	// find intersection of this ray with the sphere in the scene
 	for (unsigned i = 0; i < p_spheres.size(); ++i)
 	{
 		float __firstTouch = INFINITY, __secondTouch = INFINITY;
-		if (p_spheres[i].Intersect(p_ptrRayOrigin, p_ptrRayDirection, __firstTouch, __secondTouch)) {
+		if (p_spheres[i].Intersect(p_ptrRayOrigin, p_ptrRayDirection, __firstTouch, __secondTouch) == true) {
 			if (__firstTouch < 0) __firstTouch = __secondTouch;
 			if (__firstTouch < __near)
 			{
@@ -137,7 +137,8 @@ Vec3f trace(const Vec3f &p_ptrRayOrigin, const Vec3f &p_ptrRayDirection, const s
 		}
 	}
 	// if there's no intersection return black or background color
-	if (!__sphere) return Vec3f(1);
+	if (!__sphere) return Vec3f(0);
+
 	Vec3f surfaceColor = 0; // color of the ray/surfaceof the object intersected by the ray
 	Vec3f phit = p_ptrRayOrigin + p_ptrRayDirection * __near; // point of intersection
 	Vec3f nhit = phit - __sphere->center; // normal at the intersection point
@@ -198,6 +199,7 @@ Vec3f trace(const Vec3f &p_ptrRayOrigin, const Vec3f &p_ptrRayDirection, const s
 					}
 				}
 				surfaceColor += __sphere->surfaceColor * transmission * std::fmaxf(float(0), nhit.dot(lightDirection)) * p_spheres[i].emissionColor;
+				
 			}
 		}
 	}
@@ -209,6 +211,63 @@ Vec3f trace(const Vec3f &p_ptrRayOrigin, const Vec3f &p_ptrRayDirection, const s
 // trace it and return a color. If the ray hits a sphere, we return the color of the
 // sphere at the intersection point, else we return the background color.
 //[/comment]
+
+Vec3f DepthBuffer(const Vec3f &p_ptrRayOrigin, const Vec3f &p_ptrRayDirection, const std::vector<Sphere> &p_spheres, const int &p_depth)
+{
+	//if (raydir.length() != 1) std::cerr << "Error " << raydir << std::endl;
+	float __near = INFINITY;
+	const Sphere* __sphere = NULL;
+
+	// find intersection of this ray with the sphere in the scene
+	for (unsigned i = 0; i < p_spheres.size(); ++i)
+	{
+		float __firstTouch = INFINITY, __secondTouch = INFINITY;
+		if (p_spheres[i].Intersect(p_ptrRayOrigin, p_ptrRayDirection, __firstTouch, __secondTouch) == true) {
+			if (__firstTouch < 0) __firstTouch = __secondTouch;
+			if (__firstTouch < __near)
+			{
+				__near = __firstTouch;
+				__sphere = &p_spheres[i];
+			}
+		}
+	}
+	// if there's no intersection return black or background color
+	if (!__sphere) return Vec3f(0);
+
+	Vec3f surfaceColor = 0; // color of the ray/surfaceof the object intersected by the ray
+	Vec3f phit = p_ptrRayOrigin + p_ptrRayDirection * __near; // point of intersection
+	Vec3f nhit = phit - __sphere->center; // normal at the intersection point
+	nhit.normalize(); // normalize normal direction
+					  // If the normal and the view direction are not opposite to each other
+					  // reverse the normal direction. That also means we are inside the sphere so set
+					  // the inside bool to true. Finally reverse the sign of IdotN which we want
+					  // positive.
+	float bias = 1e-4; // add some bias to the point from which we will be tracing
+	bool inside = false;
+	if (p_ptrRayDirection.dot(nhit) > 0) nhit = -nhit, inside = true;
+
+	float __far = -20;
+	//BACKUP (x + valor inicial) / (valor final - valor inicial)
+	//( x + valor final) / (valor inicial - valor final)
+	//float __color =  (abs(p_ptrRayDirection.z * __near) + __far) / (p_ptrRayOrigin.z - __far); //PERFEITO AO CONTRARIO
+	float __color = ( (__near + __far) / (p_ptrRayOrigin.z - __far));// LADO CERTO MAS COM COR ESTOURADA
+
+	// distanciaLocal + valor final / (distancia total)
+	// 
+	//float __color = 1/((abs(p_ptrRayDirection.z * __near) - __far) / (p_ptrRayOrigin.z - __far));
+	/*std::cout << "(p_ptrRayDirection.z * __near): " << abs(p_ptrRayDirection.z * __near);
+	std::cout << " p_ptrRayOrigin.z: " << p_ptrRayOrigin.z;
+	std::cout << " __far: " << __far;
+
+	std::cout << " result: " << __color << std::endl;*/
+
+	// (valor+valor max) / (valor max - valor min)
+	
+	
+	Vec3f __result = Vec3f(__color, __color, __color);//surfaceColor + __sphere->emissionColor;
+	return __result;
+}
+
 void RenderScenePTR(const std::vector<Sphere> &spheres, Vec3f& p_ptrImage, unsigned p_width, unsigned p_height)
 {
 	Vec3f __cameraPosition = Vec3f(0.f, 0.f, 20.f);
@@ -227,40 +286,10 @@ void RenderScenePTR(const std::vector<Sphere> &spheres, Vec3f& p_ptrImage, unsig
 			float __newRayPosY = (1.0 - 2.0 * ((y + 0.25) * invHeight)) * __angle;
 			Vec3f __rayDirection(__newRayPosX, __newRayPosY, -1);
 			__rayDirection.normalize();
-			*_pixel = trace(__cameraPosition, __rayDirection, spheres, 0);
+			//*_pixel = trace(__cameraPosition, __rayDirection, spheres, 0);
+			*_pixel = DepthBuffer(__cameraPosition, __rayDirection, spheres, 0);
 		}
 	}
-}
-void test(const std::vector<Sphere> &spheres)
-{
-	Vec3f __cameraPosition = Vec3f(0.f, 0.f, 20.f);
-	unsigned width = 640, height = 480;
-	Vec3f *__ptrImage = new Vec3f[width * height], *_pixel = __ptrImage;
-	//p_ptrImage = *__ptrImage;
-	float __invWidth = 1 / float(width), invHeight = 1 / float(height);
-	float __fieldOfView = 30, _aspectRatio = width / float(height);
-	float __angle = tan(M_PI * 0.5 * __fieldOfView / 180.);
-	// Trace rays
-	for (unsigned y = 0; y < height; ++y)
-	{
-		for (unsigned x = 0; x < width; ++x, ++_pixel)
-		{
-			float __newRayPosX = (2 * ((x + 0.5) * __invWidth) - 1) * __angle * _aspectRatio;
-			float __newRayPosY = (1 - 2 * ((y + 0.5) * invHeight)) * __angle;
-			Vec3f __rayDirection(__newRayPosX, __newRayPosY, -1);
-			__rayDirection.normalize();
-			*_pixel = trace(__cameraPosition, __rayDirection, spheres, 0);
-		}
-	}
-	std::ofstream ofs("./untitled.ppm", std::ios::out | std::ios::binary);
-	ofs << "P6\n" << width << " " << height << "\n255\n";
-	for (unsigned i = 0; i < width * height; ++i) {
-		ofs << (unsigned char)(std::fmin(float(1), __ptrImage[i].x) * 255) <<
-			(unsigned char)(std::fmin(float(1), __ptrImage[i].y) * 255) <<
-			(unsigned char)(std::fmin(float(1), __ptrImage[i].z) * 255);
-	}
-	ofs.close();
-	delete[] __ptrImage;
 }
 #define filterMeanWidth 3
 #define filterMeanHeight 3
@@ -314,6 +343,21 @@ double filterVerticalFindEdges[filterVerticalFindEdgesHeight][filteVerticalFindE
 	0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0,
 };
+float clamp(float p_value, float p_a, float p_b)
+{
+	if (p_value < p_a)
+	{
+		return p_a;
+	}
+
+	if (p_value > p_b)
+	{
+		return p_b;
+	}
+
+	return p_value;
+}
+
 float min(float p_left, float p_right)
 {
 	if (p_left < p_right)
@@ -436,24 +480,20 @@ std::vector<Sphere> InitializeSpheres()
 	srand(13);
 	std::vector<Sphere> spheres;
 	// position, radius, surface color, reflectivity, transparency, emission color
+
 	//center red sphere
 	spheres.push_back(Sphere(Vec3f(0.0, 0, 0), 3.0, Vec3f(1.00, 0.32, 0.36), 1, 0.5));
+
 	//circular spheres
 	spheres.push_back(Sphere(Vec3f(5.5, 0.0, 0.0), 1.5, Vec3f(0.0, 0.32, 1.0), 1, 0.0));
 	spheres.push_back(Sphere(Vec3f(-5.5, 0.0, 0.0), 1.5, Vec3f(1.0, 0.32, 0.0), 1, 0.0));
 	spheres.push_back(Sphere(Vec3f(-2.5, 2.0, -5.5), 1.5, Vec3f(0.0, 1.0, 0.32), 1, 0.0));
 	spheres.push_back(Sphere(Vec3f(2.5, -2.0, 5.5), 1.5, Vec3f(1.0, 0.32, 1.0), 1, 0.0));
 	//background giant spheres
-	spheres.push_back(Sphere(Vec3f(0.0, -10004, -20), 10000.0, Vec3f(0.20, 0.20, 0.20), 0, 0.0));
-	//spheres.push_back(Sphere(Vec3f(0.0, 1500, -20), 1000.0, Vec3f(0.40, 0.20, 0.20), 0, 0.0));
-	//spheres.push_back(Sphere(Vec3f(5.0, 2, -20), 5, Vec3f(0.0f, 1.0f, 0.0f), 0.5, 0.0));
-	// spheres.push_back(Sphere(Vec3f(0.0, 10004, -20), 10000, Vec3f(1.0f, 0.0f, 1.0f), 0, 0.5));
-	//spheres.push_back(Sphere(Vec3f(0.0, 0, -20), 4, Vec3f(1.00, 0.32, 0.36), 1, 0.5));
-	//spheres.push_back(Sphere(Vec3f(5.0, -1, -15), 2, Vec3f(0.90, 0.76, 0.46), 1, 0.0));
-	//spheres.push_back(Sphere(Vec3f(5.0, 0, -25), 3, Vec3f(0.65, 0.77, 0.97), 1, 0.0));
-	//spheres.push_back(Sphere(Vec3f(-5.5, 0, -15), 3, Vec3f(0.90, 0.90, 0.90), 1, 0.0));
+	spheres.push_back(Sphere(Vec3f(0.0, -10004, -20), 10000.0, Vec3f(0.1, 0.1, 0.1), 0, 0.0));
+
 	// light
-	spheres.push_back(Sphere(Vec3f(0.0, 20, 30), 3, Vec3f(0.00, 0.00, 0.00), 0, 0.0, Vec3f(3)));
+	//spheres.push_back(Sphere(Vec3f(10, 10, 30), 3, Vec3f(0.00, 0.00, 0.00), 0, 0.0, Vec3f(10)));
 	return spheres;
 }
 
