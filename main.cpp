@@ -1,4 +1,4 @@
-// Editado por Felipe Rodrigues de Almeida
+// Editado por Felipe Rodrigues de Almeida e Geovani Weizenmann
 // [header]
 // A very basic raytracer example.
 // [/header]
@@ -107,24 +107,20 @@ public:
 	/*
 	bool intersect(const Vec3f &orig, const Vec3f &dir, float &tNear, uint32_t &triIndex, Vec2f &uv) const
 	{
-		float t0, t1; // solutions for t if the ray intersects
-					  // analytic solution
-		Vec3f L = orig - center;
-		float a = dir.dotProduct(dir);
-		float b = 2 * dir.dotProduct(L);
-		float c = L.dotProduct(L) - radius2;
-		if (!solveQuadratic(a, b, c, t0, t1)) return false;
-
-		if (t0 > t1) std::swap(t0, t1);
-
-		if (t0 < 0) {
-			t0 = t1; // if t0 is negative, let's use t1 instead
-			if (t0 < 0) return false; // both t0 and t1 are negative
-		}
-
-		tNear = t0;
-
-		return true;
+	float t0, t1; // solutions for t if the ray intersects
+	// analytic solution
+	Vec3f L = orig - center;
+	float a = dir.dotProduct(dir);
+	float b = 2 * dir.dotProduct(L);
+	float c = L.dotProduct(L) - radius2;
+	if (!solveQuadratic(a, b, c, t0, t1)) return false;
+	if (t0 > t1) std::swap(t0, t1);
+	if (t0 < 0) {
+	t0 = t1; // if t0 is negative, let's use t1 instead
+	if (t0 < 0) return false; // both t0 and t1 are negative
+	}
+	tNear = t0;
+	return true;
 	}
 	*/
 };
@@ -135,6 +131,11 @@ public:
 float mix(const float &a, const float &b, const float &mix)
 {
 	return b * mix + a * (1 - mix);
+}
+
+float scalar(Vec3f a, Vec3f b)
+{
+	return a.x * b.x + a.y * b.y + a.z * b.z;
 }
 //[comment]
 // This is the main trace function. It takes a ray as argument (defined by its origin
@@ -201,9 +202,11 @@ Vec3f Trace(const Vec3f &p_ptrRayOrigin, const Vec3f &p_ptrRayDirection, const s
 			refraction = Trace(phit - nhit * bias, refrdir, p_spheres, p_depth + 1);
 		}
 		// the result is a mix of reflection and refraction (if the sphere is transparent)
-		surfaceColor = (
+		surfaceColor = ((
 			reflection * fresneleffect +
-			refraction * (1 - fresneleffect) * __sphere->transparency) * __sphere->surfaceColor;
+			refraction * (1 - fresneleffect) * __sphere->transparency) * __sphere->surfaceColor) * scalar(Vec3f(.5, .5, .5), nhit);;
+		//R  = 
+		// scalar (intensidadeLuzAmbiente * kAmbienteObjecto) + IntensidadeDifusa (scalar(normal, fonte de luz) * kDifusaObjeto + (R*V)^concentraçãoBrilho * kEspecularObjeto )
 	}
 	else
 	{
@@ -227,7 +230,7 @@ Vec3f Trace(const Vec3f &p_ptrRayOrigin, const Vec3f &p_ptrRayDirection, const s
 						}
 					}
 				}
-				surfaceColor += __sphere->surfaceColor * transmission * std::fmaxf(float(0), nhit.dot(lightDirection)) * p_spheres[i].emissionColor;
+				surfaceColor += (__sphere->surfaceColor * transmission * std::fmaxf(float(0), nhit.dot(lightDirection)) * p_spheres[i].emissionColor);
 			}
 		}
 	}
@@ -239,20 +242,6 @@ Vec3f Trace(const Vec3f &p_ptrRayOrigin, const Vec3f &p_ptrRayDirection, const s
 // trace it and return a color. If the ray hits a sphere, we return the color of the
 // sphere at the intersection point, else we return the background color.
 //[/comment]
-float ClampValue(float p_value, float p_min, float p_max)
-{
-	if (p_value > p_max)
-	{
-		return p_max;
-	}
-
-	if (p_value < p_min)
-	{
-		return p_min;
-	}
-
-	return p_value;
-}
 
 float DepthBuffer(const Vec3f &p_ptrRayOrigin, const Vec3f &p_ptrRayDirection, const std::vector<Sphere> &p_spheres)
 {
@@ -315,7 +304,7 @@ Vec3f NormalMapBuffer(const Vec3f &p_ptrRayOrigin, const Vec3f &p_ptrRayDirectio
 
 	float __colorR = (nhit.x + 1) / 2;
 	float __colorG = (nhit.y + 1) / 2;
-	float __colorB = (nhit.z + 1) * 0.5; 
+	float __colorB = (nhit.z + 1) * 0.5;
 
 	Vec3f __surfaceColor = Vec3f(__colorR, __colorG, __colorB);
 	return __surfaceColor;
@@ -353,7 +342,7 @@ void RenderScenePTR(const std::vector<Sphere> &spheres, Vec3f& p_ptrImage, unsig
 
 			if (p_targetBuffer == 0)
 			{
-				*__pixelColor = Trace(__cameraPosition, __rayDirection, spheres, 0);				
+				*__pixelColor = Trace(__cameraPosition, __rayDirection, spheres, 0);
 			}
 			else if (p_targetBuffer == 1)
 			{
@@ -361,31 +350,29 @@ void RenderScenePTR(const std::vector<Sphere> &spheres, Vec3f& p_ptrImage, unsig
 				/*float __maxDistanceDifference = 0.25f;
 				if (abs(__currentDistance - __lastDistanceHorizontal) > __maxDistanceDifference)
 				{
-					*__pixelColor = Vec3f(1);
+				*__pixelColor = Vec3f(1);
 				}
 				else
 				{
-					if (y > 0)
-					{
-						float lastDistanceUpper = lastPixelDistances[x];
-						if (abs(__currentDistance - lastDistanceUpper) > __maxDistanceDifference)
-						{
-							*__pixelColor = Vec3f(1);
-						}
-						else
-						{
-							*__pixelColor = Vec3f(0);
-						}
-					}
-					else
-					{
-						*__pixelColor = Vec3f(0);
-
-					}
+				if (y > 0)
+				{
+				float lastDistanceUpper = lastPixelDistances[x];
+				if (abs(__currentDistance - lastDistanceUpper) > __maxDistanceDifference)
+				{
+				*__pixelColor = Vec3f(1);
 				}
-
+				else
+				{
+				*__pixelColor = Vec3f(0);
+				}
+				}
+				else
+				{
+				*__pixelColor = Vec3f(0);
+				}
+				}
 				currentPixelDistances[x] = __currentDistance;
-				__lastDistanceHorizontal = __currentDistance;	*/		
+				__lastDistanceHorizontal = __currentDistance;	*/
 			}
 			else if (p_targetBuffer == 2)
 			{
@@ -687,82 +674,81 @@ int main(int argc, char **argv)
 class Object
 {
 public:
-	Object(const Matrix44f &o2w) : objectToWorld(o2w), worldToObject(o2w.inverse()) {}
-	virtual ~Object() {}
-	virtual bool intersect(const Vec3f &, const Vec3f &, float &, uint32_t &, Vec2f &) const = 0;
-	virtual void getSurfaceProperties(const Vec3f &, const Vec3f &, const uint32_t &, const Vec2f &, Vec3f &, Vec2f &) const = 0;
-	Matrix44f objectToWorld, worldToObject;
-	MaterialType type = kDiffuse;
-	Vec3f albedo = 0.18;
-	float Kd = 0.8; // phong model diffuse weight
-	float Ks = 0.2; // phong model specular weight
-	float n = 10; // phong specular exponent
+Object(const Matrix44f &o2w) : objectToWorld(o2w), worldToObject(o2w.inverse()) {}
+virtual ~Object() {}
+virtual bool intersect(const Vec3f &, const Vec3f &, float &, uint32_t &, Vec2f &) const = 0;
+virtual void getSurfaceProperties(const Vec3f &, const Vec3f &, const uint32_t &, const Vec2f &, Vec3f &, Vec2f &) const = 0;
+Matrix44f objectToWorld, worldToObject;
+MaterialType type = kDiffuse;
+Vec3f albedo = 0.18;
+float Kd = 0.8; // phong model diffuse weight
+float Ks = 0.2; // phong model specular weight
+float n = 10; // phong specular exponent
 };
 */
+//
+//bool solveQuadratic(const float &a, const float &b, const float &c, float &x0, float &x1)
+//{
+//	float discr = b * b - 4 * a * c;
+//	if (discr < 0) return false;
+//	else if (discr == 0)
+//	{
+//		x0 = x1 = -0.5 * b / a;
+//	}
+//	else
+//	{
+//		float q = (b > 0) ? -0.5 * (b + sqrt(discr)) : -0.5 * (b - sqrt(discr));
+//		x0 = q / a;
+//		x1 = c / q;
+//	}
+//
+//	return true;
+//}
 
-bool solveQuadratic(const float &a, const float &b, const float &c, float &x0, float &x1)
-{
-	float discr = b * b - 4 * a * c;
-	if (discr < 0) return false;
-	else if (discr == 0)
-	{
-		x0 = x1 = -0.5 * b / a;
-	}
-	else
-	{
-		float q = (b > 0) ?	-0.5 * (b + sqrt(discr)) : -0.5 * (b - sqrt(discr));
-		x0 = q / a;
-		x1 = c / q;
-	}
-
-	return true;
-}
-
-bool solveQuadratic(const float &a, const float &b, const float &c, float &x0, float &x1) 
-{ 
-    float discr = b * b - 4 * a * c; 
-    if (discr < 0) return false; 
-    else if (discr == 0) { 
-        x0 = x1 = - 0.5 * b / a; 
-    } 
-    else { 
-        float q = (b > 0) ? 
-            -0.5 * (b + sqrt(discr)) : 
-            -0.5 * (b - sqrt(discr)); 
-        x0 = q / a; 
-        x1 = c / q; 
-    } 
- 
-    return true; 
-}
+//bool solveQuadratic(const float &a, const float &b, const float &c, float &x0, float &x1)
+//{
+//	float discr = b * b - 4 * a * c;
+//	if (discr < 0) return false;
+//	else if (discr == 0) {
+//		x0 = x1 = -0.5 * b / a;
+//	}
+//	else {
+//		float q = (b > 0) ?
+//			-0.5 * (b + sqrt(discr)) :
+//			-0.5 * (b - sqrt(discr));
+//		x0 = q / a;
+//		x1 = c / q;
+//	}
+//
+//	return true;
+//}
 
 /*
 class Light
 {
 public:
-	Light(const Matrix44f &l2w, const Vec3f &c = 1, const float &i = 1) : lightToWorld(l2w), color(c), intensity(i) {}
-	virtual ~Light() {}
-	virtual void illuminate(const Vec3f &P, Vec3f &, Vec3f &, float &) const = 0;
-	Vec3f color;
-	float intensity;
-	Matrix44f lightToWorld;
+Light(const Matrix44f &l2w, const Vec3f &c = 1, const float &i = 1) : lightToWorld(l2w), color(c), intensity(i) {}
+virtual ~Light() {}
+virtual void illuminate(const Vec3f &P, Vec3f &, Vec3f &, float &) const = 0;
+Vec3f color;
+float intensity;
+Matrix44f lightToWorld;
 };
-
 class DistantLight : public Light //Directional?????
 {
-	Vec3f dir;
+Vec3f dir;
 public:
-	DistantLight(const Matrix44f &l2w, const Vec3f &c = 1, const float &i = 1) : Light(l2w, c, i)
-	{
-		l2w.multDirMatrix(Vec3f(0, 0, -1), dir);
-		dir.normalize(); // in case the matrix scales the light
-	}
-	void illuminate(const Vec3f &P, Vec3f &lightDir, Vec3f &lightIntensity, float &distance) const
-	{
-		lightDir = dir;
-		lightIntensity = color * intensity;
-		distance = kInfinity;
-	}
+DistantLight(const Matrix44f &l2w, const Vec3f &c = 1, const float &i = 1) : Light(l2w, c, i)
+{
+l2w.multDirMatrix(Vec3f(0, 0, -1), dir);
+dir.normalize(); // in case the matrix scales the light
+}
+void illuminate(const Vec3f &P, Vec3f &lightDir, Vec3f &lightIntensity, float &distance) const
+{
+lightDir = dir;
+lightIntensity = color * intensity;
+distance = kInfinity;
+}
 };
 */
 /*
