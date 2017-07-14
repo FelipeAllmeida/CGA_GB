@@ -1,4 +1,4 @@
-// Editado por Felipe Rodrigues de Almeida e Geovani Weizenmann
+// Editado por Felipe Rodrigues de Almeida
 // [header]
 // A very basic raytracer example.
 // [/header]
@@ -61,6 +61,7 @@ public:
 		return *this;
 	}
 	Vec3<T> operator * (const T &f) const { return Vec3<T>(x * f, y * f, z * f); }
+	Vec3<T> operator / (const T &f) const { return Vec3<T>(x / f, y / f, z / f); }
 	Vec3<T> operator * (const Vec3<T> &v) const { return Vec3<T>(x * v.x, y * v.y, z * v.z); }
 	T dot(const Vec3<T> &v) const { return x * v.x + y * v.y + z * v.z; }
 	Vec3<T> operator - (const Vec3<T> &v) const { return Vec3<T>(x - v.x, y - v.y, z - v.z); }
@@ -103,31 +104,17 @@ public:
 		t1 = tca + thc;
 		return true;
 	}
-	//Pra luz
-	/*
-	bool intersect(const Vec3f &orig, const Vec3f &dir, float &tNear, uint32_t &triIndex, Vec2f &uv) const
-	{
-	float t0, t1; // solutions for t if the ray intersects
-	// analytic solution
-	Vec3f L = orig - center;
-	float a = dir.dotProduct(dir);
-	float b = 2 * dir.dotProduct(L);
-	float c = L.dotProduct(L) - radius2;
-	if (!solveQuadratic(a, b, c, t0, t1)) return false;
-	if (t0 > t1) std::swap(t0, t1);
-	if (t0 < 0) {
-	t0 = t1; // if t0 is negative, let's use t1 instead
-	if (t0 < 0) return false; // both t0 and t1 are negative
-	}
-	tNear = t0;
-	return true;
-	}
-	*/
 };
 //[comment]
 // This variable controls the maximum recursion depth
 //[/comment]
 #define MAX_RAY_DEPTH 5
+Vec3f _cameraPosition = Vec3f(0.f, 0.f, 20.f);
+
+Vec3f _sunPos = Vec3f(-5, 10, 10);
+Vec3f _sunColor = Vec3f(1, 1, 1);
+float _sunIntensity = 20;
+
 float mix(const float &a, const float &b, const float &mix)
 {
 	return b * mix + a * (1 - mix);
@@ -137,19 +124,32 @@ float scalar(Vec3f a, Vec3f b)
 {
 	return a.x * b.x + a.y * b.y + a.z * b.z;
 }
-//[comment]
-// This is the main trace function. It takes a ray as argument (defined by its origin
-// and direction). We test if this ray intersects any of the geometry in the scene.
-// If the ray intersects an object, we compute the intersection point, the normal
-// at the intersection point, and shade this point using this information.
-// Shading depends on the surface property (is it transparent, reflective, diffuse).
-// The function returns a color for the ray. If the ray intersects an object that
-// is the color of the object at the intersection point, otherwise it returns
-// the background color.
-//[/comment]
+
+float clamp(float p_value, float p_a, float p_b)
+{
+	if (p_value < p_a)
+	{
+		return p_a;
+	}
+
+	if (p_value > p_b)
+	{
+		return p_b;
+	}
+
+	return p_value;
+}
+
+float vecDistance(Vec3f a, Vec3f b)
+{
+	return sqrt(pow(a.x - b.x, 2) + pow(a.y - b.y, 2) + pow(a.z - b.z, 2));
+}
+
+
 Vec3f Trace(const Vec3f &p_ptrRayOrigin, const Vec3f &p_ptrRayDirection, const std::vector<Sphere> &p_spheres, const int &p_depth)
 {
 	//if (raydir.length() != 1) std::cerr << "Error " << raydir << std::endl;
+
 	float __near = INFINITY;
 	const Sphere* __sphere = NULL;
 
@@ -202,11 +202,38 @@ Vec3f Trace(const Vec3f &p_ptrRayOrigin, const Vec3f &p_ptrRayDirection, const s
 			refraction = Trace(phit - nhit * bias, refrdir, p_spheres, p_depth + 1);
 		}
 		// the result is a mix of reflection and refraction (if the sphere is transparent)
-		surfaceColor = ((
-			reflection * fresneleffect +
-			refraction * (1 - fresneleffect) * __sphere->transparency) * __sphere->surfaceColor) * scalar(Vec3f(.5, .5, .5), nhit);;
-		//R  = 
-		// scalar (intensidadeLuzAmbiente * kAmbienteObjecto) + IntensidadeDifusa (scalar(normal, fonte de luz) * kDifusaObjeto + (R*V)^concentraçãoBrilho * kEspecularObjeto )
+
+		//R  = 2n (scalar (n, rin) ) - rin
+		Vec3f __lightDirection = Vec3f(_sunPos - phit);
+		__lightDirection.normalize();
+		Vec3f __eyeVector = phit - _cameraPosition;
+		__eyeVector.normalize();
+
+		Vec3f __reflectedRay = __lightDirection - (nhit * 2) * (nhit.dot(__lightDirection));
+		float __distanceToLightSource = vecDistance(_sunPos, phit);
+
+		float __kAmbient = 0.7;												// scene reflection constant
+
+		float __kDiffuse = 0.4;												// diffuse constant
+		float __kSpecular = 0.9;											// specular constant
+
+
+
+																			//Vec3f __phongModel = __ambientLight * __kAmbient + (__kDiffuse * (nhit.dot(p_ptrRayDirection)));// + __kSpecular * pow(__reflectedRay.dot(p_ptrRayDirection*-1), __objectShiniess));
+
+		float __cosTheta = clamp(nhit.dot(__lightDirection), 0, 1);
+		float __cosAlpha = clamp(__reflectedRay.dot(__eyeVector), 0, 1);
+		Vec3f __sphereColor = ((reflection * fresneleffect + refraction * (1 - fresneleffect) * __sphere->transparency) * __sphere->surfaceColor);
+
+		Vec3f __ambientLight = __sphereColor * __kAmbient;			// intensity * objectReflection
+		Vec3f __diffuseLight = __sphereColor * _sunColor * _sunIntensity * __cosTheta / (2 * __distanceToLightSource);//(nhit.dot(p_ptrRayDirection)) * __kDiffuse;
+		Vec3f __specularLight = __sphereColor * _sunColor * _sunIntensity * pow(__cosAlpha, 5) / (2 * __distanceToLightSource);
+
+		//surfaceColor = ((reflection * fresneleffect + refraction * (1 - fresneleffect) * __sphere->transparency) * __sphere->surfaceColor) * scalar(nhit, __phongModel);
+		surfaceColor = __ambientLight + __diffuseLight + __specularLight; //* nhit.dot(__phongModel);		
+																		  // scalar (intensidadeLuzAmbiente * kAmbienteObjecto) + IntensidadeDifusa (scalar(normal, fonte de luz) * kDifusaObjeto + (R*V)^concentraçãoBrilho * kEspecularObjeto )
+
+
 	}
 	else
 	{
@@ -234,7 +261,7 @@ Vec3f Trace(const Vec3f &p_ptrRayOrigin, const Vec3f &p_ptrRayDirection, const s
 			}
 		}
 	}
-	Vec3f __result = surfaceColor + __sphere->emissionColor;
+	Vec3f __result = surfaceColor * __sphere->surfaceColor /*+ __sphere->emissionColor*/;
 	return __result;
 }
 //[comment]
@@ -263,7 +290,7 @@ float DepthBuffer(const Vec3f &p_ptrRayOrigin, const Vec3f &p_ptrRayDirection, c
 	// horizontal é vermelho
 	// vertical é verde
 	// profundidade é azul
-	if (!__sphere) return 0;
+	if (!__sphere) return 1;
 
 	float __renderPosLimitZ = -10;
 	float __depth = 0;
@@ -311,11 +338,11 @@ Vec3f NormalMapBuffer(const Vec3f &p_ptrRayOrigin, const Vec3f &p_ptrRayDirectio
 }
 // targetBuffer 
 // 0 = normal
-// 1 = depth
+// 1 = cell
 // 2 = normal
+// 3 = depth
 void RenderScenePTR(const std::vector<Sphere> &spheres, Vec3f& p_ptrImage, unsigned p_width, unsigned p_height, int p_targetBuffer)
 {
-	Vec3f __cameraPosition = Vec3f(0.f, 0.f, 20.f);
 	p_ptrImage = *new Vec3f[p_width * p_height];
 	Vec3f *__pixelColor = &p_ptrImage;
 	//p_ptrImage = *__ptrImage;
@@ -342,41 +369,65 @@ void RenderScenePTR(const std::vector<Sphere> &spheres, Vec3f& p_ptrImage, unsig
 
 			if (p_targetBuffer == 0)
 			{
-				*__pixelColor = Trace(__cameraPosition, __rayDirection, spheres, 0);
+				*__pixelColor = Trace(_cameraPosition, __rayDirection, spheres, 0);
 			}
 			else if (p_targetBuffer == 1)
 			{
-				/*float __currentDistance =*/ *__pixelColor = DepthBuffer(__cameraPosition, __rayDirection, spheres);
-				/*float __maxDistanceDifference = 0.25f;
+				Vec3f __pixelToonColor = Trace(_cameraPosition, __rayDirection, spheres, 0);
+
+				float __r = __pixelToonColor.x * 255;
+				float __g = __pixelToonColor.y * 255;
+				float __b = __pixelToonColor.z * 255;
+				__pixelToonColor.x = (float)(__r + (50 - (int)__r % 50)) / 255;
+				__pixelToonColor.y = (float)(__g + (50 - (int)__g % 50)) / 255;
+				__pixelToonColor.z = (float)(__b + (50 - (int)__b % 50)) / 255;
+
+				Vec3f __depthColor = Vec3f(1);
+
+				float __currentDistance =/* *__pixelColor = */ DepthBuffer(_cameraPosition, __rayDirection, spheres);
+				float __maxDistanceDifference = 0.1f;
+
 				if (abs(__currentDistance - __lastDistanceHorizontal) > __maxDistanceDifference)
 				{
-				*__pixelColor = Vec3f(1);
+					__depthColor = Vec3f(0);
 				}
 				else
 				{
-				if (y > 0)
+					if (y > 0)
+					{
+						float lastDistanceUpper = lastPixelDistances[x];
+						if (abs(__currentDistance - lastDistanceUpper) > __maxDistanceDifference)
+						{
+							__depthColor = Vec3f(0);
+						}
+						else
+						{
+							__depthColor = Vec3f(1);
+						}
+					}
+					else
+					{
+						__depthColor = Vec3f(1);
+					}
+				}
+
+				if (__depthColor.x == 0)
 				{
-				float lastDistanceUpper = lastPixelDistances[x];
-				if (abs(__currentDistance - lastDistanceUpper) > __maxDistanceDifference)
-				{
-				*__pixelColor = Vec3f(1);
+					__pixelToonColor = Vec3f(0);
 				}
-				else
-				{
-				*__pixelColor = Vec3f(0);
-				}
-				}
-				else
-				{
-				*__pixelColor = Vec3f(0);
-				}
-				}
+
+				*__pixelColor = __pixelToonColor;
+
 				currentPixelDistances[x] = __currentDistance;
-				__lastDistanceHorizontal = __currentDistance;	*/
+				__lastDistanceHorizontal = __currentDistance;
 			}
 			else if (p_targetBuffer == 2)
 			{
-				*__pixelColor = NormalMapBuffer(__cameraPosition, __rayDirection, spheres);
+				*__pixelColor = NormalMapBuffer(_cameraPosition, __rayDirection, spheres);
+			}
+			else if (p_targetBuffer == 3)
+			{
+				*__pixelColor = DepthBuffer(_cameraPosition, __rayDirection, spheres);
 			}
 		}
 		lastPixelDistances = currentPixelDistances;
@@ -424,21 +475,6 @@ double filterFindEdges[filterFindEdgesHeight][filterFindEdgesWidth] =
 };
 double factorFindEdges = 1.0 / 36.0;
 double biasFindEdges = 0.0;
-
-float clamp(float p_value, float p_a, float p_b)
-{
-	if (p_value < p_a)
-	{
-		return p_a;
-	}
-
-	if (p_value > p_b)
-	{
-		return p_b;
-	}
-
-	return p_value;
-}
 
 float min(float p_left, float p_right)
 {
@@ -544,7 +580,6 @@ void UseToonColor(Vec3f* p_ptrImage, int p_width, int p_height, int p_multiplier
 
 void SaveImagePPM(Vec3f* p_ptrImage, float p_width, float p_height)
 {
-	// Save result to a PPM image (keep these flags if you compile under Windows)
 	std::ofstream __offStream("./untitled.ppm", std::ios::out | std::ios::binary);
 	__offStream << "P6\n" << p_width << " " << p_height << "\n255\n";
 	for (unsigned i = 0; i < p_width * p_height; ++i) {
@@ -560,22 +595,14 @@ std::vector<Sphere> InitializeSpheres()
 {
 	srand(13);
 	std::vector<Sphere> spheres;
-	// position, radius, surface color, reflectivity, transparency, emission color
 
-	//center red sphere
-	spheres.push_back(Sphere(Vec3f(0.0, 0, 0), 3.0, Vec3f(1.00, 0.32, 0.36), 1, 0.5));
+	spheres.push_back(Sphere(Vec3f(0.0, 0, 0), 3.0, Vec3f(1.00, 1, 1), 1, 0.5));
 
-	//circular spheres
 	spheres.push_back(Sphere(Vec3f(5.5, 0.0, 0.0), 1.5, Vec3f(0.0, 0.32, 1.0), 1, 0.0));
 	spheres.push_back(Sphere(Vec3f(-5.5, 0.0, 0.0), 1.5, Vec3f(1.0, 0.32, 0.0), 1, 0.0));
 	spheres.push_back(Sphere(Vec3f(-2.5, 2.0, -5.5), 1.5, Vec3f(0.0, 1.0, 0.32), 1, 0.0));
 	spheres.push_back(Sphere(Vec3f(2.5, -2.0, 5.5), 1.5, Vec3f(1.0, 0.32, 1.0), 1, 0.0));
 
-	//background giant spheres
-	//spheres.push_back(Sphere(Vec3f(0.0, -10004, -20), 10000.0, Vec3f(0.0, 0.0, 0.0), 0.0, 0.0));
-
-	// local light
-	//spheres.push_back(Sphere(Vec3f(5.5, 20, -5.5), 3, Vec3f(0.00, 0.00, 0.00), 0, 0.0, Vec3f(50)));
 	spheres.push_back(Sphere(Vec3f(10, 10, 30), 3, Vec3f(0.00, 0.00, 0.00), 0, 0.0, Vec3f(20)));
 	return spheres;
 }
@@ -608,8 +635,9 @@ int main(int argc, char **argv)
 	system("cls");
 
 	std::cout << "0 - default" << std::endl;
-	std::cout << "1 - depth" << std::endl;
+	std::cout << "1 - cell" << std::endl;
 	std::cout << "2 - normal map" << std::endl;
+	std::cout << "3 - depth" << std::endl;
 	std::cout << "Choose target rendering mode: " << std::endl;
 	std::cin >> __response;
 	if (__response == "0")
@@ -623,6 +651,10 @@ int main(int argc, char **argv)
 	else if (__response == "2")
 	{
 		__targetRenderingMode = 2;
+	}
+	else if (__response == "3")
+	{
+		__targetRenderingMode = 3;
 	}
 
 	system("cls");
@@ -669,123 +701,3 @@ int main(int argc, char **argv)
 	system("Pause");
 	return 0;
 }
-
-/*
-class Object
-{
-public:
-Object(const Matrix44f &o2w) : objectToWorld(o2w), worldToObject(o2w.inverse()) {}
-virtual ~Object() {}
-virtual bool intersect(const Vec3f &, const Vec3f &, float &, uint32_t &, Vec2f &) const = 0;
-virtual void getSurfaceProperties(const Vec3f &, const Vec3f &, const uint32_t &, const Vec2f &, Vec3f &, Vec2f &) const = 0;
-Matrix44f objectToWorld, worldToObject;
-MaterialType type = kDiffuse;
-Vec3f albedo = 0.18;
-float Kd = 0.8; // phong model diffuse weight
-float Ks = 0.2; // phong model specular weight
-float n = 10; // phong specular exponent
-};
-*/
-//
-//bool solveQuadratic(const float &a, const float &b, const float &c, float &x0, float &x1)
-//{
-//	float discr = b * b - 4 * a * c;
-//	if (discr < 0) return false;
-//	else if (discr == 0)
-//	{
-//		x0 = x1 = -0.5 * b / a;
-//	}
-//	else
-//	{
-//		float q = (b > 0) ? -0.5 * (b + sqrt(discr)) : -0.5 * (b - sqrt(discr));
-//		x0 = q / a;
-//		x1 = c / q;
-//	}
-//
-//	return true;
-//}
-
-//bool solveQuadratic(const float &a, const float &b, const float &c, float &x0, float &x1)
-//{
-//	float discr = b * b - 4 * a * c;
-//	if (discr < 0) return false;
-//	else if (discr == 0) {
-//		x0 = x1 = -0.5 * b / a;
-//	}
-//	else {
-//		float q = (b > 0) ?
-//			-0.5 * (b + sqrt(discr)) :
-//			-0.5 * (b - sqrt(discr));
-//		x0 = q / a;
-//		x1 = c / q;
-//	}
-//
-//	return true;
-//}
-
-/*
-class Light
-{
-public:
-Light(const Matrix44f &l2w, const Vec3f &c = 1, const float &i = 1) : lightToWorld(l2w), color(c), intensity(i) {}
-virtual ~Light() {}
-virtual void illuminate(const Vec3f &P, Vec3f &, Vec3f &, float &) const = 0;
-Vec3f color;
-float intensity;
-Matrix44f lightToWorld;
-};
-class DistantLight : public Light //Directional?????
-{
-Vec3f dir;
-public:
-DistantLight(const Matrix44f &l2w, const Vec3f &c = 1, const float &i = 1) : Light(l2w, c, i)
-{
-l2w.multDirMatrix(Vec3f(0, 0, -1), dir);
-dir.normalize(); // in case the matrix scales the light
-}
-void illuminate(const Vec3f &P, Vec3f &lightDir, Vec3f &lightIntensity, float &distance) const
-{
-lightDir = dir;
-lightIntensity = color * intensity;
-distance = kInfinity;
-}
-};
-*/
-/*
-Step 1: create a Cartesian coordinate system in which the up vector is oriented along the shaded point normal N(the shaded point normal N
-and the up vector of the coordinate system are aligned).
-Step2 : create a sample using the spherical to Cartesian coordinates equations.We will show in this chapter how this can be done in practice.
-Step 3 : transform the sample direction from the original coordinate system to the shaded point coordinate system.
-Step 4 : trace a ray in the scene in the sampled direction.
-Step 5 : if the ray intersects an object, compute the color of that object at the intersection point and add this result to a temporary variable.Because the surface is diffuse, don't forget to multiply the light intensity returned along each ray by the dot product between the ray direction (the light direction) and the shaded normal N
-(see below).
-Step 6 : repeat step 2 to 5 N - times.
-Step 7 : divide the temporary variables that holds all the results of all the sampled rays by N, the total number of samples used.The final value is an approximation of the shaded point indirect diffuse illumination.The illumination of P
-by other diffuse surfaces in the scene.
-*/
-
-/*
-Vec3f castRay(Vec3f &orig;, Vec3f &dir;, const uint32_t &depth;, ...)
-{
-if (depth > options.maxDepth) return 0;
-Vec3f hitPointColor = 0;
-// compute direct ligthing
-...
-// step1: compute shaded point coordinate system using normal N.
-...
-// number of samples N
-uint32_t N = 16;
-Vec3f indirectDiffuse = 0;
-for (uint32_t i = 0; i < N; ++i) {
-// step 2: create sample in world space
-Vec3f sample = ...;
-// step 3: transform sample from world space to shaded point local coordinate system
-sampleWorld = ...;
-// step 4 & 5: cast a ray in this direction
-indirectDiffuse += N.dotProduct(sampleWorld) * castRay(P, sampleWorld, depth + 1, ...);
-}
-// step 7: divide the sum by the total number of samples N
-hitPointColor += (indirectDiffuse / N) * albedo;
-...
-return hitPointColor;
-} */
