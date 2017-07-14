@@ -1,4 +1,4 @@
-// Editado por Felipe Rodrigues de Almeida
+// Editado por Felipe Rodrigues de Almeida e Geovani Weizenmann
 // [header]
 // A very basic raytracer example.
 // [/header]
