@@ -1,22 +1,24 @@
 ﻿  main.cpp
-c:\users\eloisa weizenmann\desktop\cga_gb\main.cpp(44): warning C4005: 'INFINITY': macro redefinition
+c:\users\eloisa weizenmann\desktop\cga_gb\main.cpp(61): warning C4005: 'INFINITY': macro redefinition
   c:\program files (x86)\windows kits\10\include\10.0.10240.0\ucrt\math.h(78): note: see previous definition of 'INFINITY'
-c:\users\eloisa weizenmann\desktop\cga_gb\main.cpp(180): warning C4305: 'initializing': truncation from 'double' to 'float'
-c:\users\eloisa weizenmann\desktop\cga_gb\main.cpp(187): warning C4305: 'argument': truncation from 'double' to 'const float'
 c:\users\eloisa weizenmann\desktop\cga_gb\main.cpp(197): warning C4305: 'initializing': truncation from 'double' to 'float'
-c:\users\eloisa weizenmann\desktop\cga_gb\main.cpp(307): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-c:\users\eloisa weizenmann\desktop\cga_gb\main.cpp(324): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-c:\users\eloisa weizenmann\desktop\cga_gb\main.cpp(338): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-c:\users\eloisa weizenmann\desktop\cga_gb\main.cpp(339): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-c:\users\eloisa weizenmann\desktop\cga_gb\main.cpp(566): warning C4305: 'argument': truncation from 'double' to 'float'
-c:\users\eloisa weizenmann\desktop\cga_gb\main.cpp(569): warning C4305: 'argument': truncation from 'double' to 'float'
-c:\users\eloisa weizenmann\desktop\cga_gb\main.cpp(570): warning C4305: 'argument': truncation from 'double' to 'float'
-c:\users\eloisa weizenmann\desktop\cga_gb\main.cpp(571): warning C4305: 'argument': truncation from 'double' to 'float'
-c:\users\eloisa weizenmann\desktop\cga_gb\main.cpp(572): warning C4305: 'argument': truncation from 'double' to 'float'
-c:\users\eloisa weizenmann\desktop\cga_gb\main.cpp(652): warning C4244: 'initializing': conversion from 'float' to 'unsigned int', possible loss of data
-c:\users\eloisa weizenmann\desktop\cga_gb\main.cpp(653): warning C4244: 'argument': conversion from 'float' to 'unsigned int', possible loss of data
-c:\users\eloisa weizenmann\desktop\cga_gb\main.cpp(658): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-c:\users\eloisa weizenmann\desktop\cga_gb\main.cpp(660): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-c:\users\eloisa weizenmann\desktop\cga_gb\main.cpp(662): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+c:\users\eloisa weizenmann\desktop\cga_gb\main.cpp(204): warning C4305: 'argument': truncation from 'double' to 'const float'
+c:\users\eloisa weizenmann\desktop\cga_gb\main.cpp(214): warning C4305: 'initializing': truncation from 'double' to 'float'
+c:\users\eloisa weizenmann\desktop\cga_gb\main.cpp(232): warning C4305: 'initializing': truncation from 'double' to 'float'
+c:\users\eloisa weizenmann\desktop\cga_gb\main.cpp(234): warning C4305: 'initializing': truncation from 'double' to 'float'
+c:\users\eloisa weizenmann\desktop\cga_gb\main.cpp(235): warning C4305: 'initializing': truncation from 'double' to 'float'
+c:\users\eloisa weizenmann\desktop\cga_gb\main.cpp(351): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+c:\users\eloisa weizenmann\desktop\cga_gb\main.cpp(368): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+c:\users\eloisa weizenmann\desktop\cga_gb\main.cpp(382): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+c:\users\eloisa weizenmann\desktop\cga_gb\main.cpp(383): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+c:\users\eloisa weizenmann\desktop\cga_gb\main.cpp(618): warning C4305: 'argument': truncation from 'double' to 'float'
+c:\users\eloisa weizenmann\desktop\cga_gb\main.cpp(619): warning C4305: 'argument': truncation from 'double' to 'float'
+c:\users\eloisa weizenmann\desktop\cga_gb\main.cpp(620): warning C4305: 'argument': truncation from 'double' to 'float'
+c:\users\eloisa weizenmann\desktop\cga_gb\main.cpp(621): warning C4305: 'argument': truncation from 'double' to 'float'
+c:\users\eloisa weizenmann\desktop\cga_gb\main.cpp(701): warning C4244: 'initializing': conversion from 'float' to 'unsigned int', possible loss of data
+c:\users\eloisa weizenmann\desktop\cga_gb\main.cpp(702): warning C4244: 'argument': conversion from 'float' to 'unsigned int', possible loss of data
+c:\users\eloisa weizenmann\desktop\cga_gb\main.cpp(707): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+c:\users\eloisa weizenmann\desktop\cga_gb\main.cpp(709): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+c:\users\eloisa weizenmann\desktop\cga_gb\main.cpp(711): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
   CGA_GB.vcxproj -> C:\Users\ELOISA WEIZENMANN\Desktop\CGA_GB\Debug\CGA_GB.exe
   CGA_GB.vcxproj -> C:\Users\ELOISA WEIZENMANN\Desktop\CGA_GB\Debug\CGA_GB.pdb (Partial PDB)
